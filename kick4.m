@@ -23,7 +23,7 @@ sample = 'DANNY_THE TRIBAL_CLEAN_SAMPLE.wav';
 
 T = .020;
 N = floor(T*fs);
-nfft = 1024;
+nfft = N;
 overlap = N/2;
 
 % ===========================
@@ -53,7 +53,7 @@ end
 Threshold = 80000;
 Distance = 1000;
 
-ax=linspace(0,length(x),length(HFC));
+ax = 0:N-overlap:(N-overlap) * (length(HFC) - 1);
 plot(ax,HFC);
 colorbar
 xlabel('HFC')
@@ -74,8 +74,9 @@ for k = 2:size(specSample,2)
     end
 end
 
-ax=linspace(0,length(x),length(HFCSample));
+ax = 0:N-overlap:(N-overlap) * (length(HFCSample) - 1);
 [pks1,locs1] = findpeaks(HFCSample,ax,'MinPeakDistance',Distance,'MinPeakHeight',Threshold);
+text(locs1+.02,pks1,num2str((1:numel(pks1))'))
 
 figure(1)
 subplot(413)
@@ -86,26 +87,44 @@ beatTimes = baseTime + (1/fs)*(locs'-1);
 
 %attack_time = round(locs);
 bufferLen = size(x,1);
-sampleLen = numel(y);
+sampleLen = size(y,1);
 
-sampleTrack = zeros(bufferLen+sampleLen,1);
+sampleTrack = zeros(bufferLen+sampleLen,2);
 
 % Place sample at each onset
 for k = 1:numel(locs)
-    idx = locs(k);
-    sampleTrack(idx : idx+sampleLen-1) = y;
+   %if index is < 0, i.e. -20, then cut off 20 samples, but also cut off 
+   %20 samples from y
+   %idx+sampleLen-1 > length(sampleTrack)
+   
+   difflocs = locs(k)/locs1;
+   
+   if(difflocs > 0)
+      idx = locs(k) - difflocs;
+   else
+      idx = locs(k);
+   end
+   
+   %if(idx < 0)
+       %sampleTrack(idx : idx+sampleLen-1, :) = sampleTrack(find(sampleTrack>0,1):end);   
+   %end
+   
+   sampleTrack(idx : idx+sampleLen-1, :) = sampleTrack(idx : idx+sampleLen-1, :) + y;
+   
 end
 
-sampleTail = zeros(size(sampleLen,1),1);
+%a_short = sampleTrack(find(sampleTrack>0,1):end);
 
-% Overlap and add tails from previous frame
-sampleTrack(1:sampleLen) = sampleTrack(1:sampleLen) + sampleTail;
+Guide = x(44100*1 : 44100*7);
+Aligned = sampleTrack(44100*1 : 44100*7);
 
-ax=linspace(0,length(x),length(sampleTrack));
-plot(sampleTrack)
+mix = Guide + Aligned;
+
+ax = 0:N-overlap:(N-overlap) * (length(HFC) - 1);
+plot(sampleTrack(:,1))
 colorbar
 xlabel('Trigger Placement')
-axis([min(ax),max(ax),min(sampleTrack),max(sampleTrack)])
+axis([min(ax),max(ax),min(sampleTrack(:,1)),max(sampleTrack(:,1))])
 
 % ===========================
 % ---- Spectral Flux ----
@@ -125,7 +144,7 @@ plot(ax,spectral_flux);
 xlabel('Spectral Flux')
 axis([0,max(ax),0,max(spectral_flux)])
 
-[pks,locs] = findpeaks(spectral_flux,ax,'MinPeakDistance',.1,'MinPeakHeight',75);
+[pks2,locs2] = findpeaks(spectral_flux,ax,'MinPeakDistance',.1,'MinPeakHeight',75);
 text(locs+.02,pks,num2str((1:numel(pks))'))
 
 % ===========================
@@ -139,7 +158,7 @@ for k = 1:size(spec,2)
   frame = spec(:,k);
   spectral_centroid(k) = sum ((1:size(frame)).*abs(frame'));
 end
-ax=linspace(0,length(x)/fs,length(spectral_centroid));
+ax = 0:N-overlap:(N-overlap) * (length(HFC) - 1);
 plot(ax,spectral_centroid);
 colorbar
 xlabel('Spectral Centroid')

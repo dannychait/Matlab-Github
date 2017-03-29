@@ -1,19 +1,4 @@
-% ===========================
-%
-% Danny Chait
-% Onset Analysis and Resynthesis
-%
-% Turn all into functions
-% Bring in new paper to discuss that has the words transcriptions
-%
-% ===========================
-
-% ===========================
-% ---- Load Sound File ----
-% ===========================
-
-wav = 'DANNY_THE TRIBAL_SNARE_ACOUSTIC.wav';
-sample = 'DANNY_THE TRIBAL_SNARE_SAMPLE.wav';
+function [wav,sample,Threshold] = SimpleSample(wav,sample,Threshold)
 
 [x, fs] = audioread(wav);
  y = audioread(sample);
@@ -24,7 +9,7 @@ sample = 'DANNY_THE TRIBAL_SNARE_SAMPLE.wav';
 
 T = .020;
 N = floor(T*fs);
-nfft = 1024;
+nfft = N;
 overlap = N/2;
 
 % ===========================
@@ -51,7 +36,7 @@ for k = 2:size(spec,2)
 end
 
 % Find peaks
-Threshold = 50000;
+%Threshold = 30000;
 Distance = 1000;
 
 ax = 0:N-overlap:(N-overlap) * (length(HFC) - 1);
@@ -127,57 +112,4 @@ colorbar
 xlabel('Trigger Placement')
 axis([min(ax),max(ax),min(sampleTrack(:,1)),max(sampleTrack(:,1))])
 
-% ===========================
-% ---- Spectral Flux ----
-% ===========================
-
-figure(1)
-subplot(414)
-spectral_flux=zeros(1,size(spec,2));
-for k = 2:size(spec,2)
-  currframe=spec(:,k);
-  prevframe=spec(:,k-1);
-  l2norm=sqrt(sum((abs(currframe)-abs(prevframe)).^2));
-  spectral_flux(k)=l2norm;
-end
-ax=linspace(0,length(x)/fs,length(spectral_flux));
-plot(ax,spectral_flux);
-colorbar
-xlabel('Spectral Flux')
-axis([0,max(ax),0,max(spectral_flux)])
-
-[pks,locs] = findpeaks(spectral_flux,ax,'MinPeakDistance',.1,'MinPeakHeight',50);
-text(locs+.02,pks,num2str((1:numel(pks))'))
-
-% ===========================
-% ---- Spectral Centroid ----
-% ===========================
-
-figure(3)
-subplot(411)
-spectral_centroid=zeros(1,size(spec,2));
-for k = 1:size(spec,2)
-  frame = spec(:,k);
-  spectral_centroid(k) = sum ((1:size(frame)).*abs(frame'));
-end
-ax=linspace(0,length(x)/fs,length(spectral_centroid));
-plot(ax,spectral_centroid);
-colorbar
-xlabel('Spectral Centroid')
-axis([0,max(ax),0,max(spectral_centroid)])
-
-% ===========================
-% ---- Originals ----
-% ===========================
-
-figure(2)
-subplot(311)
-ax=linspace(0,length(x)/fs,length(x));
-plot(ax,x)
-xlabel('Original Acoustic')
-
-figure(2)
-subplot(312)
-ax=linspace(0,length(y)*fs,length(y));
-plot(ax,y)
-xlabel('Clean Sample')
+sound(mix,fs);
