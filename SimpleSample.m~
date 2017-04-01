@@ -1,23 +1,33 @@
-function [wav,sample,Threshold] = SimpleSample(wav,sample,Threshold)
+%function [wav,sample,Threshold] = SimpleSample(wav,sample,Threshold)
+
+wav = 'DANNY_THE TRIBAL_SNARE_ACOUSTIC.wav';
+sample = 'DANNY_THE TRIBAL_SNARE_SAMPLE.wav';
+Threshold = 30000;
 
 [x, fs] = audioread(wav);
  y = audioread(sample);
  
  %Removing zeros from beginning and end of each vector
+ 
  i1 = find(x, 1, 'first');
  i2 = find(x, 1, 'last'); 
- newx = zeros(length(i1:i2),2);
+ origLen = length(i1:i2);
+ newx = zeros(origLen,2);
+ 
  
  i3 = find(y, 1, 'first');
  i4 = find(y, 1, 'last');
- newy = zeros(length(i3:i4),2);
+ sampLen = length(i3:i4);
+ newy = zeros(sampLen,2);
  
 for k = i1:i2
-    newx(k) = newx(k) + x(k); 
+    newx(k,2) = newx(k,2) + x(k); 
 end
 
 for k = i3:i4
-    newy(k) = newy(k) + y(k); 
+  
+        newy(k,2) = newy(k,2) + y(k); 
+    end
 end
  
  

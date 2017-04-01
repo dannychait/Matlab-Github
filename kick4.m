@@ -16,6 +16,8 @@ sample = 'DANNY_THE TRIBAL_CLEAN_SAMPLE.wav';
 [x, fs] = audioread(wav);
  y = audioread(sample);
  z = audioread(mistrigger);
+ 
+
 
 % ===========================
 % ---- Initialize ----
@@ -98,12 +100,16 @@ for k = 1:numel(locs)
    %idx+sampleLen-1 > length(sampleTrack)
    
    difflocs = locs(k)/locs1;
+   ifLessZero = locs(k) - locs1;
    
    if(difflocs > 0)
       idx = locs(k) - difflocs;
+          
    else
       idx = locs(k);
    end
+   
+       
    
    %if(idx < 0)
        %sampleTrack(idx : idx+sampleLen-1, :) = sampleTrack(find(sampleTrack>0,1):end);   
