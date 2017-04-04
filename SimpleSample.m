@@ -1,24 +1,17 @@
+%put HFC in its own function
+%implement NMF from paper
+
 function [wav,sample,Threshold] = SimpleSample(wav,sample,Threshold)
 
 [x, fs] = audioread(wav);
  y = audioread(sample);
  
- %Removing zeros from beginning and end of each vector
- i1 = find(x, 1, 'first');
- i2 = find(x, 1, 'last'); 
- newx = zeros(length(i1:i2),2);
- 
+%Removing zeros from beginning and end of sample vector
  i3 = find(y, 1, 'first');
  i4 = find(y, 1, 'last');
- newy = zeros(length(i3:i4),2);
- 
-for k = i1:i2
-    newx(k) = newx(k) + x(k); 
-end
+ newy = y(i3:i4);
 
-for k = i3:i4
-    newy(k) = newy(k) + y(k); 
-end
+
  
  
 % ===========================
@@ -29,8 +22,6 @@ T = .020;
 N = floor(T*fs);
 nfft = N;
 overlap = N/2;
-
-
 
 % ===========================
 % ---- Spectrograms ----
@@ -57,6 +48,10 @@ for k = 2:size(spec,2)
     end
 end
 
+HFC = sqrt(HFC);
+
+Threshold = 0.5 * max(HFC);
+
 % Find peaks
 %Threshold = 30000;
 Distance = 1000;
@@ -81,6 +76,9 @@ for k = 2:size(specSample,2)
         HFCSample(k) = HFCSample(k)+(abs(specSample(j,k))).^2 * j;
     end
 end
+
+HFCSample = sqrt(HFCSample);
+
 
 ax = 0:N-overlap:(N-overlap) * (length(HFCSample) - 1);
 [pks1,locs1] = findpeaks(HFCSample,ax,'MinPeakDistance',Distance,'MinPeakHeight',Threshold);
@@ -107,10 +105,10 @@ for k = 1:numel(locs)
    %20 samples from y
    %idx+sampleLen-1 > length(sampleTrack)
    
-   difflocs = locs(k)/locs1;
+   %difflocs = locs(k)/locs1;
    
-   if(difflocs > 0)
-      idx = locs(k) - difflocs;
+   if(locs(k) - locs1(1) > 0)
+      idx = locs(k) - locs1(1);
    else
       idx = locs(k);
    end
@@ -119,7 +117,7 @@ for k = 1:numel(locs)
        %sampleTrack(idx : idx+sampleLen-1, :) = sampleTrack(find(sampleTrack>0,1):end);   
    %end
    
-   sampleTrack(idx : idx+sampleLen-1, :) = sampleTrack(idx : idx+sampleLen-1, :) + y;
+   sampleTrack(idx : idx+sampleLen-1, :) = sampleTrack(idx : idx+sampleLen-1, :) + y * pks(k)/pks(1);
    
 end
 
@@ -135,5 +133,11 @@ plot(sampleTrack(:,1))
 colorbar
 xlabel('Trigger Placement')
 axis([min(ax),max(ax),min(sampleTrack(:,1)),max(sampleTrack(:,1))])
+
+%sound(x,fs);
+%pause(length(x)/fs);
+
+%sound(sampleTrack,fs);
+%pause(length(x)/fs);
 
 sound(mix,fs);
